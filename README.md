@@ -22,5 +22,15 @@ For example, on Mountain Lion, after compiling ClamAV by hand, the library gets 
 Run `go build` and, if you have copied the virus files from ClamAV's test/ subdirectory, you can 
 run `go test`. Run `go test -test.bench=Bench` to run the benchmarks.
 
-The avclient directory contains a simple filesystem scanner. To compile it run `go build` in that
+The examples/avclient directory contains a simple filesystem scanner. To compile it run `go build` in that
 directory.
+
+## Update:
+The library is updated to be used with newer versions of `libclamav` (currently tested with go 1.12 and libclamav version 0.101.4 on Debian 10).
+
+To test the library you will require the testdata that is generated during the clamav build process.
+The command to test the library is `go test ./test`
+
+Requirements to build:
+- clamav - version 0.101.4 
+- libclamav-dev - version 0.101.4

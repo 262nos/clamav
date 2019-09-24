@@ -2,68 +2,70 @@
 // Use of this source code is governed by a
 // license that can be found in the LICENSE file.
 
-package clamav
+package test
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
+
+	clamav "github.com/262nos/clamav"
 )
 
 func TestRetflevel(t *testing.T) {
-	s := Retflevel()
+	s := clamav.Retflevel()
 	if s < 66 {
 		t.Errorf("Retflevel (%d < 66, earliest tested)", s)
 	}
 }
 
 func TestRetver(t *testing.T) {
-	s := Retver()
+	s := clamav.Retver()
 	if s == "" {
 		t.Errorf("Retver: nil")
 	}
 }
 
 var StrErrorTests = []struct {
-	num ErrorCode
+	num clamav.ErrorCode
 	out string
 }{
-	{Success, "No viruses detected"},
-	{Virus, "Virus(es) detected"},
-	{Enullarg, "Null argument passed to function"},
-	{Earg, "Invalid argument passed to function"},
-	{Emalfdb, "Malformed database"},
-	{Ecvd, "Broken or not a CVD file"},
-	{Everify, "Can't verify database integrity"},
-	{Eunpack, "Can't unpack some data"},
-	{Eopen, "Can't open file or directory"},
-	{Ecreat, "Can't create new file"},
-	{Eunlink, "Can't unlink file"},
-	{Estat, "Can't get file status"},
-	{Eread, "Can't read file"},
-	{Eseek, "Can't set file offset"},
-	{Ewrite, "Can't write to file"},
-	{Edup, "Can't duplicate file descriptor"},
-	{Eacces, "Can't access file"},
-	{Etmpfile, "Can't create temporary file"},
-	{Etmpdir, "Can't create temporary directory"},
-	{Emap, "Can't map file into memory"},
-	{Emem, "Can't allocate memory"},
-	{Etimeout, "Time limit reached"},
-	{Break, "Unknown error code"},
-	{Emaxrec, "CL_EMAXREC"},
-	{Emaxsize, "CL_EMAXSIZE"},
-	{Emaxfiles, "CL_EMAXFILES"},
-	{Eformat, "CL_EFORMAT: Bad format or broken data"},
+	{clamav.Success, "No viruses detected"},
+	{clamav.Virus, "Virus(es) detected"},
+	{clamav.Enullarg, "Null argument passed to function"},
+	{clamav.Earg, "Invalid argument passed to function"},
+	{clamav.Emalfdb, "Malformed database"},
+	{clamav.Ecvd, "Broken or not a CVD file"},
+	{clamav.Everify, "Can't verify database integrity"},
+	{clamav.Eunpack, "Can't unpack some data"},
+	{clamav.Eopen, "Can't open file or directory"},
+	{clamav.Ecreat, "Can't create new file"},
+	{clamav.Eunlink, "Can't unlink file"},
+	{clamav.Estat, "Can't get file status"},
+	{clamav.Eread, "Can't read file"},
+	{clamav.Eseek, "Can't set file offset"},
+	{clamav.Ewrite, "Can't write to file"},
+	{clamav.Edup, "Can't duplicate file descriptor"},
+	{clamav.Eacces, "Can't access file"},
+	{clamav.Etmpfile, "Can't create temporary file"},
+	{clamav.Etmpdir, "Can't create temporary directory"},
+	{clamav.Emap, "Can't map file into memory"},
+	{clamav.Emem, "Can't allocate memory"},
+	{clamav.Etimeout, "CL_ETIMEOUT: Time limit reached"},
+	{clamav.Break, "Unknown error code"},
+	{clamav.Emaxrec, "CL_EMAXREC"},
+	{clamav.Emaxsize, "CL_EMAXSIZE"},
+	{clamav.Emaxfiles, "CL_EMAXFILES"},
+	{clamav.Eformat, "CL_EFORMAT: Bad format or broken data"},
 	//{Eparse, "Can't parse data"},	// when 0.98 is released
-	{Ebytecode, "Error during bytecode execution"},
-	{EbytecodeTestfail, "Failure in bytecode testmode"},
-	{Elock, "Mutex lock failed"},
-	{Ebusy, "Scanner still active"},
-	{Estate, "Bad state (engine not initialized, or already initialized)"},
-	{ELast, "Unknown error code"},
-	{ELast + 1, "Unknown error code"},
+	{clamav.Ebytecode, "Error during bytecode execution"},
+	{clamav.EbytecodeTestfail, "Failure in bytecode testmode"},
+	{clamav.Elock, "Mutex lock failed"},
+	{clamav.Ebusy, "Scanner still active"},
+	{clamav.Estate, "Bad state (engine not initialized, or already initialized)"},
+	{clamav.ELast, "Unknown error code"},
+	{clamav.ELast + 1, "Unknown error code"},
 	{1<<8 - 1, "Unknown error code"},
 	{1<<16 - 1, "Unknown error code"},
 	{1<<32 - 1, "Unknown error code"},
@@ -71,7 +73,7 @@ var StrErrorTests = []struct {
 
 func TestStrError(t *testing.T) {
 	for _, tt := range StrErrorTests {
-		s := StrError(tt.num)
+		s := clamav.StrError(tt.num)
 		if s != tt.out {
 			t.Errorf("StrError: %d = %q, want %q", tt.num, s, tt.out)
 		}
@@ -80,12 +82,12 @@ func TestStrError(t *testing.T) {
 
 func BenchmarkStrError(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		StrError(StrErrorTests[0].num)
+		clamav.StrError(StrErrorTests[0].num)
 	}
 }
 
 func TestDBDir(t *testing.T) {
-	s := DBDir()
+	s := clamav.DBDir()
 	if s == "" {
 		t.Errorf("DBDir: nil")
 	}
@@ -97,12 +99,12 @@ var CountSigsTests = []struct {
 }{
 	{".", 0},
 	{"testdata", 0},
-	{DBDir(), 0},
+	{clamav.DBDir(), 0},
 }
 
 func TestCountSigs(t *testing.T) {
 	for _, v := range CountSigsTests {
-		cnt, err := CountSigs(v.path, CountSigsAll)
+		cnt, err := clamav.CountSigs(v.path, clamav.CountSigsAll)
 		if err != nil {
 			t.Errorf("CountSigs: %d, want %d in %s (%v)", cnt, v.want, v.path, err)
 		}
@@ -110,26 +112,26 @@ func TestCountSigs(t *testing.T) {
 }
 
 var numTypes = []struct {
-	f                   EngineField
+	f                   clamav.EngineField
 	isro, can0, is32bit bool
 }{
-	{EngineMaxScansize, false, true, false},
-	{EngineMaxFilesize, false, true, false},
-	{EngineMaxRecursion, false, false, true},
-	{EngineMaxFiles, false, true, true},
-	{EngineMinCcCount, false, true, true},
-	{EngineMinSsnCount, false, true, true},
+	{clamav.EngineMaxScansize, false, true, false},
+	{clamav.EngineMaxFilesize, false, true, false},
+	{clamav.EngineMaxRecursion, false, false, true},
+	{clamav.EngineMaxFiles, false, true, true},
+	{clamav.EngineMinCcCount, false, true, true},
+	{clamav.EngineMinSsnCount, false, true, true},
 	/* char * */
-	{EngineDbOptions, true, true, true}, // read-only
-	{EngineDbVersion, true, true, true}, // read-only
-	{EngineAcOnly, false, true, true},
-	{EngineAcMindepth, false, true, true},
-	{EngineAcMaxdepth, false, true, true},
+	{clamav.EngineDbOptions, true, true, true}, // read-only
+	{clamav.EngineDbVersion, true, true, true}, // read-only
+	{clamav.EngineAcOnly, false, true, true},
+	{clamav.EngineAcMindepth, false, true, true},
+	{clamav.EngineAcMaxdepth, false, true, true},
 	/* char * */
-	{EngineKeeptmp, false, true, true},
-	{EngineBytecodeSecurity, false, true, true},
-	{EngineBytecodeTimeout, false, true, true},
-	{EngineBytecodeMode, false, true, true},
+	{clamav.EngineKeeptmp, false, true, true},
+	{clamav.EngineBytecodeSecurity, false, true, true},
+	{clamav.EngineBytecodeTimeout, false, true, true},
+	{clamav.EngineBytecodeMode, false, true, true},
 }
 
 var NumTests = []struct {
@@ -157,7 +159,7 @@ var NumTests = []struct {
 */
 
 func TestGetSetNum(tt *testing.T) {
-	eng := New()
+	eng := clamav.New()
 	defer eng.Free()
 
 	for _, t := range numTypes {
@@ -190,9 +192,9 @@ func TestGetSetNum(tt *testing.T) {
 	return
 }
 
-var stringTypes = []EngineField{
-	EnginePuaCategories,
-	EngineTmpdir,
+var stringTypes = []clamav.EngineField{
+	clamav.EnginePuaCategories,
+	clamav.EngineTmpdir,
 }
 
 var StringTests = []struct {
@@ -208,7 +210,7 @@ var StringTests = []struct {
 }
 
 func TestGetSetString(tt *testing.T) {
-	eng := New()
+	eng := clamav.New()
 	defer eng.Free()
 
 	for _, t := range stringTypes {
@@ -222,7 +224,7 @@ func TestGetSetString(tt *testing.T) {
 				tt.Errorf("GetString: (%d) %v: %v", t, v.set, err)
 			}
 			if v.match && n != v.want {
-				tt.Errorf("GetString: (%d) %v want %d", t, n, v.want)
+				tt.Errorf("GetString: (%d) %s want %s", t, n, v.want)
 			}
 		}
 	}
@@ -232,7 +234,7 @@ var StringSizeTests = []int{
 	32, 64, 128, 256, 512, 1024, 2048, 8192, 16384, 32768,
 }
 
-func test1(tt *testing.T, eng *Engine, fld EngineField, s string) {
+func test1(tt *testing.T, eng *clamav.Engine, fld clamav.EngineField, s string) {
 	err := eng.SetString(fld, s)
 	if err != nil {
 		tt.Errorf("SetString: field: %d (%s) %v", fld, s, err)
@@ -242,12 +244,12 @@ func test1(tt *testing.T, eng *Engine, fld EngineField, s string) {
 		tt.Errorf("GetString: (%d) %s: %v", fld, ns, err)
 	}
 	if s != ns {
-		tt.Errorf("GetString: (%d) %s want %d", fld, s, ns)
+		tt.Errorf("GetString: (%d) %s want %s", fld, s, ns)
 	}
 }
 
 func TestGetSetStringSize(t *testing.T) {
-	eng := New()
+	eng := clamav.New()
 	defer eng.Free()
 
 	for _, fld := range stringTypes {
@@ -260,18 +262,18 @@ func TestGetSetStringSize(t *testing.T) {
 }
 
 func TestNewFree(t *testing.T) {
-	eng := New()
+	eng := clamav.New()
 	if eng == nil {
 		t.Fatalf("New: nil engine")
 	}
-	err := ErrorCode(eng.Free())
-	if err != Success {
+	err := clamav.ErrorCode(eng.Free())
+	if err != clamav.Success {
 		t.Fatalf("Free: %v", err)
 	}
 }
 
 func TestSettings(t *testing.T) {
-	eng := New()
+	eng := clamav.New()
 	defer eng.Free()
 
 	s := eng.CopySettings()
@@ -281,13 +283,13 @@ func TestSettings(t *testing.T) {
 	if err := eng.ApplySettings(s); err != nil {
 		t.Fatalf("ApplySettings: %v", err)
 	}
-	if err := FreeSettings(s); err != nil {
+	if err := clamav.FreeSettings(s); err != nil {
 		t.Fatalf("FreeSettings: %v", err)
 	}
 }
 
 func TestCompile(t *testing.T) {
-	eng := New()
+	eng := clamav.New()
 	defer eng.Free()
 	if err := eng.Compile(); err != nil {
 		t.Fatalf("Compile: %v", err)
@@ -295,74 +297,75 @@ func TestCompile(t *testing.T) {
 }
 
 func TestAddref(t *testing.T) {
-	eng := New()
+	eng := clamav.New()
 	defer eng.Free()
+	/* This is not implemented
 	if err := eng.Addref(); err != nil {
 		t.Fatalf("Addref: %v", err)
-	}
+	}*/
 }
 
 var scanFiles = []struct {
 	dir, file, name string
 	scan            uint
 }{
-	{"testdata", "clam-aspack.exe", "ClamAV-Test-File", 20},
-	{"testdata", "clam-fsg.exe", "ClamAV-Test-File", 4},
-	{"testdata", "clam-mew.exe", "ClamAV-Test-File", 20},
-	{"testdata", "clam-nsis.exe", "ClamAV-Test-File", 48},
-	{"testdata", "clam-pespin.exe", "ClamAV-Test-File", 20},
-	{"testdata", "clam-petite.exe", "ClamAV-Test-File", 8},
-	{"testdata", "clam-upack.exe", "ClamAV-Test-File", 16},
-	{"testdata", "clam-upx.exe", "ClamAV-Test-File", 20},
-	{"testdata", "clam-v2.rar", "ClamAV-Test-File", 0},
-	{"testdata", "clam-v3.rar", "ClamAV-Test-File", 0},
-	{"testdata", "clam-wwpack.exe", "ClamAV-Test-File", 24},
-	{"testdata", "clam-yc.exe", "ClamAV-Test-File", 24},
-	{"testdata", "clam.7z", "ClamAV-Test-File", 0},
-	{"testdata", "clam.arj", "ClamAV-Test-File", 0},
-	{"testdata", "clam.bin-be.cpio", "ClamAV-Test-File", 0},
-	{"testdata", "clam.bin-le.cpio", "ClamAV-Test-File", 0},
-	{"testdata", "clam.bz2.zip", "ClamAV-Test-File", 0},
-	{"testdata", "clam.cab", "ClamAV-Test-File", 0},
-	{"testdata", "clam.chm", "ClamAV-Test-File", 4},
-	{"testdata", "clam.d64.zip", "ClamAV-Test-File", 0},
-	{"testdata", "clam.ea05.exe", "ClamAV-Test-File", 232},
-	{"testdata", "clam.ea06.exe", "ClamAV-Test-File", 268},
-	{"testdata", "clam.exe", "ClamAV-Test-File", 0},
-	{"testdata", "clam.exe.binhex", "ClamAV-Test-File", 0},
-	{"testdata", "clam.exe.bz2", "ClamAV-Test-File", 0},
-	{"testdata", "clam.exe.html", "ClamAV-Test-File", 0},
-	{"testdata", "clam.exe.mbox.base64", "ClamAV-Test-File", 0},
-	{"testdata", "clam.exe.mbox.uu", "ClamAV-Test-File", 0},
-	{"testdata", "clam.exe.rtf", "ClamAV-Test-File", 0},
-	{"testdata", "clam.exe.szdd", "ClamAV-Test-File", 0},
-	{"testdata", "clam.impl.zip", "ClamAV-Test-File", 0},
-	{"testdata", "clam.iso", "ClamAV-Test-File", 352},
-	{"testdata", "clam.mail", "ClamAV-Test-File", 0},
-	{"testdata", "clam.newc.cpio", "ClamAV-Test-File", 0},
-	{"testdata", "clam.odc.cpio", "ClamAV-Test-File", 0},
-	{"testdata", "clam.ole.doc", "ClamAV-Test-File", 0},
-	{"testdata", "clam.pdf", "ClamAV-Test-File", 0},
-	{"testdata", "clam.ppt", "ClamAV-Test-File", 0},
-	{"testdata", "clam.sis", "ClamAV-Test-File", 0},
-	{"testdata", "clam.tar.gz", "ClamAV-Test-File", 0},
-	{"testdata", "clam.tnef", "ClamAV-Test-File", 0},
-	{"testdata", "clam.zip", "ClamAV-Test-File", 0},
-	{"testdata", "clam_IScab_ext.exe", "ClamAV-Test-File", 5092},
-	{"testdata", "clam_IScab_int.exe", "ClamAV-Test-File", 4540},
-	{"testdata", "clam_ISmsi_ext.exe", "ClamAV-Test-File", 1192},
-	{"testdata", "clam_ISmsi_int.exe", "ClamAV-Test-File", 1196},
-	{"testdata", "clam_cache_emax.tgz", "ClamAV-Test-File", 56},
-	{"testdata", "clamjol.iso", "ClamAV-Test-File", 364},
+	{"testdata", "clam-aspack.exe", "Clamav.Test.File-6", 20},
+	{"testdata", "clam-fsg.exe", "Clamav.Test.File-6", 4},
+	{"testdata", "clam-mew.exe", "Clamav.Test.File-6", 20},
+	{"testdata", "clam-nsis.exe", "Clamav.Test.File-6", 48},
+	{"testdata", "clam-pespin.exe", "Clamav.Test.File-6", 20},
+	{"testdata", "clam-petite.exe", "Clamav.Test.File-6", 8},
+	{"testdata", "clam-upack.exe", "Clamav.Test.File-6", 16},
+	{"testdata", "clam-upx.exe", "Clamav.Test.File-6", 20},
+	{"testdata", "clam-v2.rar", "Clamav.Test.File-6", 0},
+	{"testdata", "clam-v3.rar", "Clamav.Test.File-6", 0},
+	{"testdata", "clam-wwpack.exe", "Clamav.Test.File-6", 24},
+	{"testdata", "clam-yc.exe", "Clamav.Test.File-6", 24},
+	{"testdata", "clam.7z", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.arj", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.bin-be.cpio", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.bin-le.cpio", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.bz2.zip", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.cab", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.chm", "Clamav.Test.File-6", 4},
+	{"testdata", "clam.d64.zip", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.ea05.exe", "Clamav.Test.File-6", 232},
+	{"testdata", "clam.ea06.exe", "Clamav.Test.File-6", 268},
+	{"testdata", "clam.exe", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.exe.binhex", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.exe.bz2", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.exe.html", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.exe.mbox.base64", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.exe.mbox.uu", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.exe.rtf", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.exe.szdd", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.impl.zip", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.iso", "Clamav.Test.File-6", 352},
+	{"testdata", "clam.mail", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.newc.cpio", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.odc.cpio", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.ole.doc", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.pdf", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.ppt", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.sis", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.tar.gz", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.tnef", "Clamav.Test.File-6", 0},
+	{"testdata", "clam.zip", "Clamav.Test.File-6", 0},
+	{"testdata", "clam_IScab_ext.exe", "Clamav.Test.File-6", 5092},
+	{"testdata", "clam_IScab_int.exe", "Clamav.Test.File-6", 4540},
+	{"testdata", "clam_ISmsi_ext.exe", "Clamav.Test.File-6", 1192},
+	{"testdata", "clam_ISmsi_int.exe", "Clamav.Test.File-6", 1196},
+	{"testdata", "clam_cache_emax.tgz", "Clamav.Test.File-6", 56},
+	{"testdata", "clamjol.iso", "Clamav.Test.File-6", 364},
 }
 
-func testInitAll() (*Engine, error) {
-	err := Init(InitDefault)
+func testInitAll() (*clamav.Engine, error) {
+	err := clamav.Init(clamav.InitDefault)
 	if err != nil {
 		return nil, err
 	}
-	eng := New()
-	_, err = eng.Load(DBDir(), DbStdopt)
+	eng := clamav.New()
+	_, err = eng.Load(clamav.DBDir(), clamav.DbStdopt)
 	if err != nil {
 		return nil, errors.New("can not open virus database. please use ClamAV's freshclam tool to download a public database")
 	}
@@ -379,7 +382,7 @@ func TestScan(t *testing.T) {
 
 	found := false
 	for _, v := range scanFiles {
-		virus, scan, err := eng.ScanFile(v.dir+"/"+v.file, ScanStdopt)
+		virus, scan, err := eng.ScanFile(v.dir+"/"+v.file, &clamav.ScanStdopt)
 		if err != nil {
 			if virus != "" {
 				if virus != v.name {
@@ -403,8 +406,10 @@ func benchmarkScanFile(b *testing.B, path string) {
 	defer eng.Free()
 	b.StartTimer()
 
+	CountPrecision := uint(100)
+
 	for i := 0; i < b.N; i++ {
-		virus, scan, err := eng.ScanFile(path, ScanStdopt)
+		virus, scan, err := eng.ScanFile(path, &clamav.ScanStdopt)
 		b.SetBytes(int64(scan * CountPrecision))
 		if virus == "" {
 			b.Fatalf("not a virus: %v", err)

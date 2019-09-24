@@ -128,38 +128,65 @@ const (
 	DbStdopt = (DbPhishing | DbPhishingUrls | DbBytecode)
 )
 
+// ScanOptions allows to select options for the scanning engine
+// Available options are for the following categories: general, parse, heuristic, mail, dev
+type ScanOptions C.struct_cl_scan_options
+
+/*struct {
+	General   uint32
+	Parse     uint32
+	Heuristic uint32
+	Mail      uint32
+	Dev       uint32
+}*/
+
+// ScanStdopt is the standard set of scanning options
+var ScanStdopt C.struct_cl_scan_options
+
 // Scanner options
 const (
 	// scan options
-	ScanRaw                   = 0x0
-	ScanArchive               = 0x1
-	ScanMail                  = 0x2
-	ScanOle2                  = 0x4
-	ScanBlockencrypted        = 0x8
-	ScanHTML                  = 0x10
-	ScanPe                    = 0x20
-	ScanBlockbroken           = 0x40
-	ScanMailurl               = 0x80  // ignored
-	ScanBlockmax              = 0x100 // ignored
-	ScanAlgorithmic           = 0x200
-	ScanPhishingBlockSSL      = 0x800 // ssl mismatches, not ssl by itself
-	ScanPhishingBlockCloak    = 0x1000
-	ScanElf                   = 0x2000
-	ScanPdf                   = 0x4000
-	ScanStructured            = 0x8000
-	ScanStructuredSSNNormal   = 0x10000
-	ScanStructuredSSNStripped = 0x20000
-	ScanPartialMessage        = 0x40000
-	ScanHeuristicPrecedence   = 0x80000
-	ScanBlockmacros           = 0x100000
-	ScanAllmatches            = 0x200000
-	ScanSwf                   = 0x400000
-	ScanPartitionIntxn        = 0x800000
+	// General capabilities options
+	ScanAllmatches          = 0x1  // scan in all-match mode
+	ScanCollectMetadata     = 0x2  // collect metadata
+	ScanHeuristics          = 0x4  // option to enable heuristic alerts
+	ScanHeuristicPrecedence = 0x8  // allow heuristic match to take precedence
+	ScanUnprivileged        = 0x10 // scanner will not have read access to files
 
-	ScanCollectPerformanceInfo = 0x40000000
+	// Parsing capabilities options
+	ScanParseArchive = 0x1
+	ScanParseElf     = 0x2
+	ScanParsePDF     = 0x4
+	ScanParseSWF     = 0x8
+	ScanParseHWP3    = 0x10
+	ScanParseXMLDocs = 0x20
+	ScanParseMail    = 0x40
+	ScanParseOLE2    = 0x80
+	ScanParseHTML    = 0x100
+	ScanParsePE      = 0x200
+
+	// Heuristics alerting options
+	ScanHeuristicBroken                = 0x2   /* alert on broken PE and broken ELF files */
+	ScanHeuristicExceedsMax            = 0x4   /* alert when files exceed scan limits (filesize, max scansize, or max recursion depth) */
+	ScanHeuristicPhishingSSLMismatch   = 0x8   /* alert on SSL mismatches */
+	ScanHeuristicPhishingCloak         = 0x10  /* alert on cloaked URLs in emails */
+	ScanHeuristicMacros                = 0x20  /* alert on OLE2 files containing macros */
+	ScanHeuristicEncryptedArchive      = 0x40  /* alert if archive is encrypted (rar, zip, etc) */
+	ScanHeuristicEncryptedDoc          = 0x80  /* alert if a document is encrypted (pdf, docx, etc) */
+	ScanHeuristicPartitionIntxn        = 0x100 /* alert if partition table size doesn't make sense */
+	ScanHeuristicStructured            = 0x200 /* data loss prevention options, i.e. alert when detecting personal information */
+	ScanHeuristicStructuredSSNNormal   = 0x400 /* alert when detecting social security numbers */
+	ScanHeuristicStructuredSSNStripped = 0x800 /* alert when detecting stripped social security numbers */
+
+	// Mail scanning options
+	ScanMailPartialMessage = 0x1
+
+	// Developer options
+	ScanDevCollectSha             = 0x1 /* Enables hash output in sha-collect builds - for internal use only */
+	ScanDevCollectPerformanceInfo = 0x2 /* collect performance timings */
 
 	// recommended scan settings
-	ScanStdopt = (ScanArchive | ScanMail | ScanOle2 | ScanPdf | ScanHTML | ScanPe | ScanAlgorithmic | ScanElf | ScanSwf)
+	// ScanStdopt = (ScanArchive | ScanMail | ScanOle2 | ScanPdf | ScanHTML | ScanPe | ScanAlgorithmic | ScanElf | ScanSwf)
 )
 
 // Signature count options

@@ -69,11 +69,22 @@ func deleteContext(key unsafe.Pointer) {
 	panic("no context to delete")
 }
 
+func initStandardScanningOptions() {
+	ScanStdopt = C.struct_cl_scan_options {
+		general: ScanAllmatches | ScanHeuristics,
+		parse: ScanParseArchive | ScanParseMail | ScanParseOLE2 | ScanParsePDF | ScanParseHTML | ScanParsePE | ScanParseElf | ScanParseSWF,
+		heuristic: ScanHeuristicMacros,
+		mail: 0,
+		dev: 0,
+	}
+}
+
 // Init initializes the ClamAV library. A suitable initialization can be
 // achieved by passing clamav.InitDefault to this function.
 func Init(flags uint) error {
 	var onceerr error
 	initOnce.Do(func() {
+		initStandardScanningOptions()
 		err := ErrorCode(C.cl_init(C.uint(flags)))
 		if err != Success {
 			onceerr = fmt.Errorf("Init: %v", StrError(err))
@@ -189,10 +200,20 @@ func (e *Engine) Compile() error {
 }
 
 // ScanDesc scans a file descriptor with the provided engine
-func (e *Engine) ScanDesc(desc int, opts uint) (string, uint, error) {
+/* Required arguments (as of version 0.101.4 of libclamav)
+* @param desc              File descriptor of an open file. The caller must provide this or the map.
+* @param filename          (optional) Filepath of the open file descriptor or file map.
+* @param[out] virname      Will be set to a statically allocated (i.e. needs not be freed) signature name if the scan matches against a signature.
+* @param[out] scanned      The number of bytes scanned.
+* @param engine            The scanning engine.
+* @param scanoptions       Scanning options.
+ */
+func (e *Engine) ScanDesc(desc int, opts *ScanOptions) (string, uint, error) {
 	var name *C.char
 	var scanned C.ulong
-	err := ErrorCode(C.cl_scandesc(C.int(desc), &name, &scanned, (*C.struct_cl_engine)(e), C.uint(opts)))
+	var virusName *C.char
+
+	err := ErrorCode(C.cl_scandesc(C.int(desc), name, &virusName, &scanned, (*C.struct_cl_engine)(e), (*C.struct_cl_scan_options)(opts)))
 	if err == Success {
 		return "", 0, nil
 	}
@@ -207,12 +228,21 @@ func (e *Engine) ScanDesc(desc int, opts uint) (string, uint, error) {
 // If the file is clean the error code will be Success (Clean) and virus name will be empty. If a
 // virus is found the error code will be the corresponding string for Virus (currently "Virus(es)
 // detected").
-func (e *Engine) ScanFile(path string, opts uint) (string, uint, error) {
+func (e *Engine) ScanFile(path string, opts *C.struct_cl_scan_options) (string, uint, error) {
 	var name *C.char
 	var scanned C.ulong
 	cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(cpath))
-	err := ErrorCode(C.cl_scanfile(cpath, &name, &scanned, (*C.struct_cl_engine)(e), C.uint(opts)))
+
+	tmp := C.struct_cl_scan_options {
+		general: ScanAllmatches | ScanHeuristics,
+		parse: ScanParseArchive | ScanParseMail | ScanParseOLE2 | ScanParsePDF | ScanParseHTML | ScanParsePE | ScanParseElf | ScanParseSWF,
+		heuristic: ScanHeuristicMacros,
+		mail: 0,
+		dev: 0,
+	}
+
+	err := ErrorCode(C.cl_scanfile(cpath, &name, &scanned, (*C.struct_cl_engine)(e), (*C.struct_cl_scan_options)(&tmp)))
 	if err == Success {
 		return "", 0, nil
 	}
@@ -231,7 +261,7 @@ func (e *Engine) ScanFile(path string, opts uint) (string, uint, error) {
 // detected").
 // The context argument will be sent back to the callbacks, so effort must be made to retain it
 // throughout the execution of the scan from garbage collection
-func (e *Engine) ScanFileCb(path string, opts uint, context interface{}) (string, uint, error) {
+func (e *Engine) ScanFileCb(path string, opts *C.struct_cl_scan_options, context interface{}) (string, uint, error) {
 	var name *C.char
 	var scanned C.ulong
 	// pass a C-allocated pointer to the path to avoid crashing with garbage collector
@@ -244,7 +274,7 @@ func (e *Engine) ScanFileCb(path string, opts uint, context interface{}) (string
 	// cleanup
 	defer deleteContext(cctx)
 
-	err := ErrorCode(C.cl_scanfile_callback(cpath, &name, &scanned, (*C.struct_cl_engine)(e), C.uint(opts), cctx))
+	err := ErrorCode(C.cl_scanfile_callback(cpath, &name, &scanned, (*C.struct_cl_engine)(e), (*C.struct_cl_scan_options)(opts), cctx))
 	if err == Success {
 		return "", 0, nil
 	}
@@ -265,9 +295,10 @@ func CloseMemory(f *Fmap) {
 }
 
 // ScanMapCb scans custom data
-func (e *Engine) ScanMapCb(fmap *Fmap, opts uint, context interface{}) (string, uint, error) {
+func (e *Engine) ScanMapCb(fmap *Fmap, opts *C.struct_cl_scan_options, context interface{}) (string, uint, error) {
 	var name *C.char
 	var scanned C.ulong
+	var virusName *C.char
 
 	// find where to store the context in our callback map. we do _not_ pass the context to
 	// C directly because aggressive garbage collection will move it around
@@ -275,7 +306,7 @@ func (e *Engine) ScanMapCb(fmap *Fmap, opts uint, context interface{}) (string, 
 	// cleanup
 	defer deleteContext(cctx)
 
-	err := ErrorCode(C.cl_scanmap_callback((*C.cl_fmap_t)(fmap), &name, &scanned, (*C.struct_cl_engine)(e), C.uint(opts), unsafe.Pointer(cctx)))
+	err := ErrorCode(C.cl_scanmap_callback((*C.cl_fmap_t)(fmap), name, &virusName, &scanned, (*C.struct_cl_engine)(e), (*C.struct_cl_scan_options)(opts), unsafe.Pointer(cctx)))
 	if err == Success {
 		return "", 0, nil
 	}

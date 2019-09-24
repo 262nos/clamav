@@ -24,7 +24,7 @@ import (
 	"runtime"
 )
 
-import "github.com/mirtchovski/clamav"
+import "github.com/262nos/clamav"
 
 var debug = flag.Bool("debug", false, "enable debugging output")
 var clamavdebug = flag.Bool("clamavdebug", false, "enable debugging output from the ClamAV engine")
@@ -65,7 +65,7 @@ func worker(in, cnt chan string, done chan bool, engine *clamav.Engine) {
 			log.Printf("scanning %s", path)
 		}
 		if *scan {
-			virus, _, err := engine.ScanFileCb(path, clamav.ScanStdopt|clamav.ScanAllmatches, path)
+			virus, _, err := engine.ScanFileCb(path, &clamav.ScanStdopt, path)
 			if virus != "" {
 				log.Printf("virus found in %s: %s", path, virus)
 			} else if err != nil {
@@ -198,7 +198,7 @@ func main() {
 		fmap := clamav.OpenMemory(eicar)
 		defer clamav.CloseMemory(fmap)
 
-		virus, _, err := engine.ScanMapCb(fmap, clamav.ScanStdopt|clamav.ScanAllmatches, "eicar memorytest")
+		virus, _, err := engine.ScanMapCb(fmap, &clamav.ScanStdopt, "eicar memorytest")
 		if err != nil {
 			log.Printf("error scanning in-memory: %v\n", err)
 		}
